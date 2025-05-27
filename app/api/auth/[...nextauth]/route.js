@@ -7,6 +7,7 @@ import User from "@/models/user";
 import bcrypt from "bcrypt";
 
 const authOptions = {
+    secret: process.env.NEXTAUTH_SECRET,
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID,
