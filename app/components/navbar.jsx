@@ -8,22 +8,17 @@ import { useRouter } from "next/navigation";
 import React, { useState, useRef, useEffect } from "react";
 
 const Navbar = () => {
-  // Get session data (e.g., user info) from NextAuth
   const { data: session } = useSession();
   const router = useRouter();
 
-  // Local state
-  const [query, setQuery] = useState(""); // Search query
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // Mobile menu toggle
-  const [isDropdownOpen, setDropdownOpen] = useState(false); // Dropdown visibility for logout
+  const [query, setQuery] = useState("");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDropdownOpen, setDropdownOpen] = useState(false);
 
-  // Ref for detecting clicks outside the dropdown
   const dropdownRef = useRef(null);
 
-  // Toggle dropdown open/close
   const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
-  // Handle search functionality
   const handleSearch = () => {
     if (query.trim()) {
       router.push(`/?search=${query}`);
@@ -49,7 +44,7 @@ const Navbar = () => {
   return (
     <nav className="w-full shadow-md px-4 md:px-8 py-3 relative">
       <div className="items-center container flex justify-between mx-auto gap-5">
-        {/* Logo - clickable and navigates to home */}
+        {/* Logo */}
         <div className="flex items-center space-x-4">
           <Link href="/">
             <Image
@@ -63,7 +58,7 @@ const Navbar = () => {
           </Link>
         </div>
 
-        {/* Search Bar (Desktop only) */}
+        {/* Search Bar (Desktop) */}
         <div className="hidden sm:block w-1/2">
           <div className="relative">
             <input
@@ -81,10 +76,10 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Right Section: Greeting Dropdown + Mobile Menu Icon */}
+        {/* Auth Section + Mobile Menu Icon */}
         <div className="flex items-center gap-4">
-          {/* Greeting Dropdown with Logout */}
-          {session?.user?.name && (
+          {session?.user?.name ? (
+            // If user is logged in
             <div className="relative" ref={dropdownRef}>
               <div
                 className="flex items-center space-x-1 cursor-pointer"
@@ -114,7 +109,7 @@ const Navbar = () => {
                 </svg>
               </div>
 
-              {/* Dropdown Menu for Logout */}
+              {/* Dropdown for logout */}
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg border rounded-lg z-10">
                   <button
@@ -129,9 +124,25 @@ const Navbar = () => {
                 </div>
               )}
             </div>
+          ) : (
+            // If user is not logged in
+            <div className="flex gap-3">
+              <Link
+                href="/signin"
+                className="px-4 py-2 text-purple-600 border border-purple-500 rounded-full hover:bg-purple-50 transition-all"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/signup"
+                className="px-4 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-all"
+              >
+                Sign Up
+              </Link>
+            </div>
           )}
 
-          {/* Hamburger Icon for Mobile Menu */}
+          {/* Mobile Menu Toggle Icon */}
           <Menu
             className="text-purple-500 cursor-pointer block sm:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -140,7 +151,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu Links */}
+      {/* Mobile Menu Dropdown */}
       <div
         className={`${
           isMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
@@ -159,8 +170,6 @@ const Navbar = () => {
           >
             Upload Image
           </Link>
-
-          {/* Mobile Search Input */}
           <div className="relative w-full mt-2 py-2">
             <input
               type="text"
