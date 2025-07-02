@@ -34,16 +34,16 @@ const authOptions = {
 
                 const user = await User.findOne({username: credentials.username});
 
-                const isPasswordMatched = await bcrypt.compare(credentials.password, user.password);
-
                 if (!user) {
                     throw new Error("No user found with the username");
                 }
+
+                const isPasswordMatched = await bcrypt.compare(credentials.password, user.password);
+                
                 if (!isPasswordMatched) {
                     throw new Error("Incorrect password");
                 }
                 
-
                 return {
                     name: user.username,
                     email: user.email,
