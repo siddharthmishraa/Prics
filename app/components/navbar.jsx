@@ -13,17 +13,17 @@ const Navbar = () => {
 
   const [query, setQuery] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDropdownOpen, setDropdownOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const dropdownRef = useRef(null);
 
-  const toggleDropdown = () => setDropdownOpen((prev) => !prev);
+  const toggleDropdown = () => setIsDropdownOpen((prev) => !prev);
 
   const handleSearch = () => {
-    if (query.trim()) {
-      router.push(`/?search=${query}`);
-      setQuery("");
-    }
+    if (!query.trim()) return;
+    const searchUrl = `/?search=${encodeURIComponent(query.trim())}`;
+    router.push(searchUrl);
+    setQuery(""); // Optional: clear input after search
   };
 
   // Close dropdown when clicking outside
@@ -33,7 +33,7 @@ const Navbar = () => {
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target)
       ) {
-        setDropdownOpen(false);
+        setIsDropdownOpen(false);
       }
     };
 
@@ -45,25 +45,23 @@ const Navbar = () => {
     <nav className="w-full shadow-md px-4 md:px-8 py-3 relative">
       <div className="items-center container flex justify-between mx-auto gap-5">
         {/* Logo */}
-        <div className="flex items-center space-x-4">
-          <Link href="/">
-            <Image
-              src="/prics.svg"
-              width={50}
-              height={50}
-              alt="Logo"
-              className="w-9 h-9 cursor-pointer hover:scale-105 transition-transform duration-200"
-              priority
-            />
-          </Link>
-        </div>
+        <Link href="/">
+          <Image
+            src="/prics.svg"
+            width={50}
+            height={50}
+            alt="Logo"
+            className="w-9 h-9 cursor-pointer hover:scale-105 transition-transform duration-200"
+            priority
+          />
+        </Link>
 
         {/* Search Bar (Desktop) */}
         <div className="hidden sm:block w-1/2">
           <div className="relative">
             <input
               type="text"
-              placeholder="Search"
+              placeholder="Search by key word or creator"
               className="w-full py-2 px-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 pr-12"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -76,10 +74,9 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Auth Section + Mobile Menu Icon */}
+        {/* User Section + Mobile Menu Icon */}
         <div className="flex items-center gap-4">
-          {session?.user?.name ? (
-            // If user is logged in
+          {session?.user ? (
             <div className="relative" ref={dropdownRef}>
               <div
                 className="flex items-center space-x-1 cursor-pointer"
@@ -99,23 +96,17 @@ const Navbar = () => {
                   stroke="currentColor"
                   strokeWidth="2"
                   viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19 9l-7 7-7-7"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
 
-              {/* Dropdown for logout */}
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg border rounded-lg z-10">
                   <button
                     className="block px-4 py-2 text-purple-500 w-full text-start hover:bg-gray-100"
                     onClick={() => {
-                      setDropdownOpen(false);
+                      setIsDropdownOpen(false);
                       signOut({ callbackUrl: "/signin" });
                     }}
                   >
@@ -125,7 +116,6 @@ const Navbar = () => {
               )}
             </div>
           ) : (
-            // If user is not logged in
             <div className="flex gap-3">
               <Link
                 href="/signin"
@@ -142,8 +132,8 @@ const Navbar = () => {
             </div>
           )}
 
-          {/* Mobile Menu Toggle Icon */}
-          <Menu
+          {/* Mobile Menu Icon */}
+          <Search
             className="text-purple-500 cursor-pointer block sm:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             size={40}
@@ -158,18 +148,6 @@ const Navbar = () => {
         } overflow-hidden transition-all duration-300 ease-in-out sm:hidden mt-4`}
       >
         <div className="flex flex-col space-y-2 px-4 items-center">
-          <Link
-            href="/"
-            className="block py-2 text-black text-xl transition-all duration-300 hover:text-purple-500"
-          >
-            Home
-          </Link>
-          <Link
-            href="/upload_image"
-            className="block text-black text-xl transition-all duration-300 hover:text-purple-500"
-          >
-            Upload Image
-          </Link>
           <div className="relative w-full mt-2 py-2">
             <input
               type="text"
