@@ -44,10 +44,17 @@ const authOptions = {
                     throw new Error("Incorrect password");
                 }
                 
+                // return {
+                //     name: user.username,
+                //     email: user.email,
+                // };
+
                 return {
+                    id: user._id.toString(),
                     name: user.username,
                     email: user.email,
                 };
+
             }
 
         }),
@@ -56,6 +63,17 @@ const authOptions = {
     pages: {
         signIn: "/signin",
     },
+
+    callbacks: {
+  async session({ session, token }) {
+    // Add user id to the session
+    if (token?.sub) {
+      session.user.id = token.sub;
+    }
+    return session;
+  },
+},
+
 };
 
 

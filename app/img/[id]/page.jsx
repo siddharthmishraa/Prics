@@ -17,31 +17,40 @@ const Img = () => {
   const { id } = useParams();
   const { data: session } = useSession();
 
-  const fetchMoreImgs = async () => {
-    const response = await axios.get("http://localhost:3000/api/images/");
-    const filtered = response.data.images.filter(
-      (image) => image._id !== id
-    );
-    setMoreImgs(filtered);
+  const fetchImg = async () => {
+    try {
+      const response = await axios.get(`/api/images/${id}`, {
+        headers: { "x-user-id": session?.user?.id },
+      });
+      setImg(response.data.img);
+      const imgSaved =
+        response.data.img.saves?.some(
+          (element) => session?.user?.name === element
+        ) ?? false;
+      setIsSaved(imgSaved);
+    } catch (error) {
+      console.error("Error fetching image:", error);
+    }
   };
 
-  const fetchImg = async () => {
-    const response = await axios.get(
-      `http://localhost:3000/api/images/${id}`
-    );
-    setImg(response.data.img);
-    const imgSaved =
-      response.data.img.saves?.some(
-        (element) => session?.user?.name === element
-      ) ?? false;
-    setIsSaved(imgSaved);
+  const fetchMoreImgs = async () => {
+    try {
+      const url = `/api/recommendations?imageId=${id}`;
+      const res = await axios.get(url);
+      if (res.data.success) {
+        setMoreImgs(res.data.recommendations);
+      } else {
+        setMoreImgs([]);
+      }
+    } catch (error) {
+      console.error("Error fetching more images:", error);
+      setMoreImgs([]);
+    }
   };
 
   const handlePinSave = async () => {
     try {
-      const response = await axios.post(
-        `http://localhost:3000/api/saves/${id}`
-      );
+      const response = await axios.post(`/api/saves/${id}`);
       if (response.status === 201 || response.status === 200) {
         toast.success(response.data.message);
         fetchImg();
@@ -62,11 +71,11 @@ const Img = () => {
   useEffect(() => {
     fetchImg();
     fetchMoreImgs();
-  }, [id]);
+  }, [id, session?.user?.id]);
 
   return (
     <>
-      {img && img?.imgUrl && moreImgs ? (
+      {img && img?.imgUrl ? (
         <div className="min-h-screen py-6">
           <div className="container mx-auto px-4">
             <div className="lg:flex lg:space-x-10 justify-center">
@@ -83,17 +92,13 @@ const Img = () => {
 
               <div className="lg:w-1/3 bg-white p-6 rounded-2xl shadow-lg">
                 <div className="flex items-center justify-between mb-4">
-                  {/* Save icon + count */}
                   <div className="flex items-center space-x-2">
                     <BookMarked
-                      className={`
-                        ${
-                          isSaved
-                            ? "fill-red-400 text-black hover:fill-red-600 cursor-pointer"
-                            : "bg-transparent cursor-pointer hover:fill-red-200 hover:shadow-lg hover:scale-110"
-                        } 
-                        transition-all duration-300 w-10 h-10 p-2 rounded-full
-                      `}
+                      className={`${
+                        isSaved
+                          ? "fill-red-400 text-black hover:fill-red-600 cursor-pointer"
+                          : "bg-transparent cursor-pointer hover:fill-red-200 hover:shadow-lg hover:scale-110"
+                      } transition-all duration-300 w-10 h-10 p-2 rounded-full`}
                       onClick={handlePinSave}
                     />
                     <p className="text-gray-700 text-sm">
@@ -103,7 +108,6 @@ const Img = () => {
                     </p>
                   </div>
 
-                  {/* Download button */}
                   <Link
                     href={img?.imgUrl}
                     target="_blank"
@@ -113,10 +117,11 @@ const Img = () => {
                   </Link>
                 </div>
 
-                {/* Credits */}
                 {img?.creator_profile && (
                   <div className="mb-4">
-                    <h4 className="text-lg font-semibold mb-2 text-gray-800">Credits</h4>
+                    <h4 className="text-lg font-semibold mb-2 text-gray-800">
+                      Credits
+                    </h4>
                     <p className="text-gray-700">
                       <span className="font-semibold">Creator's ID:</span>{" "}
                       {getCreatorName(img.creator_profile)}
@@ -134,18 +139,22 @@ const Img = () => {
                   </div>
                 )}
 
-                {/* Description */}
                 {img?.description && img.description.trim() !== "" && (
                   <div className="mb-4">
-                    <h4 className="text-lg font-semibold mb-2 text-gray-800">Description</h4>
-                    <p className="text-gray-700 whitespace-pre-wrap">{img.description}</p>
+                    <h4 className="text-lg font-semibold mb-2 text-gray-800">
+                      Description
+                    </h4>
+                    <p className="text-gray-700 whitespace-pre-wrap">
+                      {img.description}
+                    </p>
                   </div>
                 )}
 
-                {/* Tags */}
                 {img?.mood && img.mood.length > 0 && (
                   <div className="mb-2">
-                    <h4 className="text-lg font-semibold mb-2 text-gray-800">Tags</h4>
+                    <h4 className="text-lg font-semibold mb-2 text-gray-800">
+                      Tags
+                    </h4>
                     <div className="flex flex-wrap gap-2">
                       {img.mood.map((mood, index) => (
                         <span
@@ -163,27 +172,24 @@ const Img = () => {
 
             <h3 className="mt-10 text-2xl font-bold text-gray-900">More to explore</h3>
             <div className="flex space-x-4 overflow-x-auto py-4">
-              {moreImgs &&
-                moreImgs.map((element) => {
-                  return (
-                    <Link href={`${element._id}`} key={element._id}>
-                      <Image
-                        width={100}
-                        height={100}
-                        src={element?.imgUrl}
-                        alt="Pin"
-                        priority={true}
-                        className="w-32 h-32 object-cover rounded-lg shadow-md hover:scale-105 transition-transform"
-                      ></Image>
-                    </Link>
-                  );
-                })}
+              {moreImgs.map((element) => (
+                <Link href={`/img/${element._id}`} key={element._id.toString()}>
+                  <Image
+                    width={100}
+                    height={100}
+                    src={element?.imgUrl}
+                    alt="Pin"
+                    priority={true}
+                    className="w-32 h-32 object-cover rounded-lg shadow-md hover:scale-105 transition-transform"
+                  />
+                </Link>
+              ))}
             </div>
           </div>
         </div>
       ) : (
         <div className="flex justify-center items-center min-h-[750px]">
-          <ClipLoader color="#a855f7" size={120}></ClipLoader>
+          <ClipLoader color="#a855f7" size={120} />
         </div>
       )}
     </>

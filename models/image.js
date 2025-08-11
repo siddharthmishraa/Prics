@@ -23,7 +23,7 @@ const imageSchema = new mongoose.Schema({
   saves: [
     {
       type: String,
-      ref: "User",
+      // ref: "User",
     }
   ]
 }, {
