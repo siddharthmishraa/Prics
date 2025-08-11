@@ -20,7 +20,9 @@ const Img = () => {
   const fetchImg = async () => {
     try {
       const response = await axios.get(`/api/images/${id}`, {
-        headers: { "x-user-id": session?.user?.id },
+        headers: {
+          "x-user-id": session?.user?.id,
+        },
       });
       setImg(response.data.img);
       const imgSaved =
@@ -35,8 +37,11 @@ const Img = () => {
 
   const fetchMoreImgs = async () => {
     try {
-      const url = `/api/recommendations?imageId=${id}`;
-      const res = await axios.get(url);
+      const headers = {};
+      if (session?.user?.id) {
+        headers["x-user-id"] = session.user.id; // only send if user is logged in
+      }
+      const res = await axios.get(`/api/recommendations?imageId=${id}`, { headers });
       if (res.data.success) {
         setMoreImgs(res.data.recommendations);
       } else {
@@ -107,7 +112,6 @@ const Img = () => {
                         : `${img?.saves?.length} Saves`}
                     </p>
                   </div>
-
                   <Link
                     href={img?.imgUrl}
                     target="_blank"
@@ -119,9 +123,7 @@ const Img = () => {
 
                 {img?.creator_profile && (
                   <div className="mb-4">
-                    <h4 className="text-lg font-semibold mb-2 text-gray-800">
-                      Credits
-                    </h4>
+                    <h4 className="text-lg font-semibold mb-2 text-gray-800">Credits</h4>
                     <p className="text-gray-700">
                       <span className="font-semibold">Creator's ID:</span>{" "}
                       {getCreatorName(img.creator_profile)}
@@ -141,20 +143,14 @@ const Img = () => {
 
                 {img?.description && img.description.trim() !== "" && (
                   <div className="mb-4">
-                    <h4 className="text-lg font-semibold mb-2 text-gray-800">
-                      Description
-                    </h4>
-                    <p className="text-gray-700 whitespace-pre-wrap">
-                      {img.description}
-                    </p>
+                    <h4 className="text-lg font-semibold mb-2 text-gray-800">Description</h4>
+                    <p className="text-gray-700 whitespace-pre-wrap">{img.description}</p>
                   </div>
                 )}
 
                 {img?.mood && img.mood.length > 0 && (
                   <div className="mb-2">
-                    <h4 className="text-lg font-semibold mb-2 text-gray-800">
-                      Tags
-                    </h4>
+                    <h4 className="text-lg font-semibold mb-2 text-gray-800">Tags</h4>
                     <div className="flex flex-wrap gap-2">
                       {img.mood.map((mood, index) => (
                         <span

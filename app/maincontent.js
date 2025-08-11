@@ -16,14 +16,16 @@ export default function MainContent() {
 
   useEffect(() => {
     if (status === "loading") return;
+
     const getImages = async () => {
       try {
         let response;
         if (search) {
+          // Search mode
           response = await axios.get(`/api/images?search=${encodeURIComponent(search)}`);
           setImages(response.data.images || []);
         } else {
-          // Homepage recommendations mode
+          // Homepage dynamic recommendations — no imageId
           response = await axios.get("/api/recommendations");
           if (response.data.success) {
             setImages(response.data.recommendations || []);
@@ -34,6 +36,7 @@ export default function MainContent() {
         setImages([]);
       }
     };
+
     getImages();
   }, [search, status]);
 
