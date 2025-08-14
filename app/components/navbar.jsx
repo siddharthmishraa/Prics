@@ -36,7 +36,6 @@ const Navbar = () => {
         setIsDropdownOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -45,16 +44,18 @@ const Navbar = () => {
     <nav className="w-full shadow-md px-4 md:px-8 py-3 relative">
       <div className="items-center container flex justify-between mx-auto gap-5">
         {/* Logo */}
-        <Link href="/">
-          <Image
-            src="/prics.svg"
-            width={50}
-            height={50}
-            alt="Logo"
-            className="w-9 h-9 cursor-pointer hover:scale-105 transition-transform duration-200"
-            priority
-          />
-        </Link>
+          <Link href="/" className="items-center gap-2 flex">
+            <Image
+              src="/prics.svg"
+              width={50}
+              height={50}
+              alt="Logo"
+              className="w-9 h-9 cursor-pointer hover:scale-105 transition-transform duration-200"
+              priority
+            />
+            <span className="font-semibold text-purple-900">PRICS</span>
+          </Link>
+          {/* <h3>PRICS</h3> */}
 
         {/* Search Bar (Desktop) */}
         <div className="hidden sm:block w-1/2">

@@ -38,3 +38,12 @@ body {
 .my-masonry-grid_column > div {
   margin-bottom: 1rem;
 }
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
+}

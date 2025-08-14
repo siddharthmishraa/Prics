@@ -4,8 +4,8 @@ import { BookMarked } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import React, { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef } from "react";
 import { ClipLoader } from "react-spinners";
 import { toast } from "react-toastify";
 
@@ -15,7 +15,33 @@ const Img = () => {
   const [isSaved, setIsSaved] = useState(false);
 
   const { id } = useParams();
+  const router = useRouter();
   const { data: session } = useSession();
+
+  const scrollRef = useRef(null);
+  const [showLeft, setShowLeft] = useState(false);
+  const [showRight, setShowRight] = useState(false);
+
+  // Arrow visibility logic based on scroll position
+  const handleScroll = () => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const { scrollLeft, scrollWidth, clientWidth } = container;
+    setShowLeft(scrollLeft > 5); // slight threshold to avoid flicker
+    setShowRight(scrollLeft + clientWidth < scrollWidth - 5);
+  };
+
+  // Scroll the carousel smoothly by fixed amount
+  const scrollContainer = (direction) => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const scrollAmount = 300; // adjust to your preference
+    if (direction === "left") {
+      container.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+    } else {
+      container.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
 
   const fetchImg = async () => {
     try {
@@ -78,6 +104,11 @@ const Img = () => {
     fetchMoreImgs();
   }, [id, session?.user?.id]);
 
+  // Initialize arrow visibility when moreImgs changes or after ref set
+  useEffect(() => {
+    handleScroll();
+  }, [moreImgs]);
+
   return (
     <>
       {img && img?.imgUrl ? (
@@ -94,7 +125,6 @@ const Img = () => {
                   height={600}
                 />
               </div>
-
               <div className="lg:w-1/3 bg-white p-6 rounded-2xl shadow-lg">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
@@ -123,7 +153,9 @@ const Img = () => {
 
                 {img?.creator_profile && (
                   <div className="mb-4">
-                    <h4 className="text-lg font-semibold mb-2 text-gray-800">Credits</h4>
+                    <h4 className="text-lg font-semibold mb-2 text-gray-800">
+                      Credits
+                    </h4>
                     <p className="text-gray-700">
                       <span className="font-semibold">Creator's ID:</span>{" "}
                       {getCreatorName(img.creator_profile)}
@@ -143,7 +175,9 @@ const Img = () => {
 
                 {img?.description && img.description.trim() !== "" && (
                   <div className="mb-4">
-                    <h4 className="text-lg font-semibold mb-2 text-gray-800">Description</h4>
+                    <h4 className="text-lg font-semibold mb-2 text-gray-800">
+                      Description
+                    </h4>
                     <p className="text-gray-700 whitespace-pre-wrap">{img.description}</p>
                   </div>
                 )}
@@ -153,12 +187,13 @@ const Img = () => {
                     <h4 className="text-lg font-semibold mb-2 text-gray-800">Tags</h4>
                     <div className="flex flex-wrap gap-2">
                       {img.mood.map((mood, index) => (
-                        <span
+                        <Link
                           key={index}
-                          className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs shadow"
+                          href={`/?search=${encodeURIComponent(mood)}`}
+                          className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs shadow hover:bg-purple-200 transition"
                         >
                           #{mood}
-                        </span>
+                        </Link>
                       ))}
                     </div>
                   </div>
@@ -166,20 +201,55 @@ const Img = () => {
               </div>
             </div>
 
+            {/* More to explore carousel */}
             <h3 className="mt-10 text-2xl font-bold text-gray-900">More to explore</h3>
-            <div className="flex space-x-4 overflow-x-auto py-4">
-              {moreImgs.map((element) => (
-                <Link href={`/img/${element._id}`} key={element._id.toString()}>
-                  <Image
-                    width={100}
-                    height={100}
-                    src={element?.imgUrl}
-                    alt="Pin"
-                    priority={true}
-                    className="w-32 h-32 object-cover rounded-lg shadow-md hover:scale-105 transition-transform"
-                  />
-                </Link>
-              ))}
+            <div className="relative">
+              {/* Left Arrow (desktop only) */}
+              {showLeft && (
+                <button
+                  onClick={() => scrollContainer("left")}
+                  className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full p-2 z-10 hover:bg-gray-100"
+                  aria-label="Scroll Left"
+                >
+                  &#8592;
+                </button>
+              )}
+
+              {/* Scrollable container */}
+              <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className="flex space-x-4 overflow-x-auto py-4 px-1 scroll-smooth snap-x snap-mandatory hide-scrollbar"
+                style={{ scrollSnapType: 'x mandatory' }} // optional inline style for strict snap 
+              >
+                {moreImgs.map((element) => (
+                  <Link
+                    href={`/img/${element._id}`}
+                    key={element._id.toString()}
+                    className="flex-shrink-0 snap-start"
+                  >
+                    <Image
+                      width={150}
+                      height={150}
+                      src={element?.imgUrl}
+                      alt="Pin"
+                      priority={true}
+                      className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 object-cover rounded-lg shadow-md hover:scale-105 transition-transform"
+                    />
+                  </Link>
+                ))}
+              </div>
+
+              {/* Right Arrow (desktop only) */}
+              {showRight && (
+                <button
+                  onClick={() => scrollContainer("right")}
+                  className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 bg-white shadow-lg rounded-full p-2 z-10 hover:bg-gray-100"
+                  aria-label="Scroll Right"
+                >
+                  &#8594;
+                </button>
+              )}
             </div>
           </div>
         </div>
